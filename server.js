@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const sessionsRoutes = require('./routes/sessions');
+const analyticsRoutes = require('./routes/analytics');
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use('/profile-pics', express.static('profile-pics'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/sessions', sessionsRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

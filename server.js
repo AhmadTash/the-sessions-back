@@ -10,7 +10,7 @@ const analyticsRoutes = require("./routes/analytics");
 const app = express();
 
 // Trust proxy - important for getting real IP behind reverse proxies (Heroku, Netlify, etc.)
-app.set('trust proxy', true);
+app.set("trust proxy", true);
 
 // Middleware
 app.use(cors());

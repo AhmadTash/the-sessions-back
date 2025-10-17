@@ -38,7 +38,7 @@ const parseUserAgent = (userAgent) => {
   return { deviceType, browser, os };
 };
 
-// Helper to get IP info using ipapi.co (free service)
+// Helper to get IP info using ip-api.com (free service, no key needed)
 const getIpInfo = async (ip) => {
   // Skip geolocation for local IPs
   if (!ip || ip === "local-dev" || ip === "::1" || ip === "127.0.0.1") {
@@ -49,35 +49,60 @@ const getIpInfo = async (ip) => {
   }
 
   try {
-    // Use ipapi.co free API (1,000 requests/day, no API key needed)
-    const url = `https://ipapi.co/${ip}/json/`;
-    
+    // Use ip-api.com free API (45 requests/minute, no API key needed)
+    // More reliable than ipapi.co
+    const url = `http://ip-api.com/json/${ip}?fields=status,country,city`;
+
     return new Promise((resolve) => {
-      https.get(url, { timeout: 3000 }, (res) => {
+      const http = require("http"); // Use http for ip-api.com
+
+      const request = http.get(url, { timeout: 5000 }, (res) => {
         let data = "";
-        
+
         res.on("data", (chunk) => {
           data += chunk;
         });
-        
+
         res.on("end", () => {
           try {
             const parsed = JSON.parse(data);
-            resolve({
-              country: parsed.country_name || "Unknown",
-              city: parsed.city || "Unknown",
-            });
+
+            if (parsed.status === "success") {
+              console.log(
+                `Geolocation for ${ip}: ${parsed.country}, ${parsed.city}`
+              );
+              resolve({
+                country: parsed.country || "Unknown",
+                city: parsed.city || "Unknown",
+              });
+            } else {
+              console.log(
+                `Geolocation failed for ${ip}: ${
+                  parsed.message || "Unknown error"
+                }`
+              );
+              resolve({ country: "Unknown", city: "Unknown" });
+            }
           } catch (err) {
+            console.error(`Geolocation parse error for ${ip}:`, err.message);
             resolve({ country: "Unknown", city: "Unknown" });
           }
         });
-      }).on("error", () => {
+      });
+
+      request.on("error", (err) => {
+        console.error(`Geolocation request error for ${ip}:`, err.message);
         resolve({ country: "Unknown", city: "Unknown" });
-      }).on("timeout", () => {
+      });
+
+      request.on("timeout", () => {
+        console.error(`Geolocation timeout for ${ip}`);
+        request.destroy();
         resolve({ country: "Unknown", city: "Unknown" });
       });
     });
   } catch (error) {
+    console.error(`Geolocation exception for ${ip}:`, error.message);
     return {
       country: "Unknown",
       city: "Unknown",
@@ -92,15 +117,15 @@ router.post("/track", async (req, res) => {
       req.body;
 
     const userAgent = req.headers["user-agent"] || "";
-    
+
     // Extract real IP address - handle various proxy headers
     let ip = req.ip;
-    
+
     // Check for common proxy headers (in order of preference)
     const forwardedFor = req.headers["x-forwarded-for"];
     const realIp = req.headers["x-real-ip"];
     const cfConnectingIp = req.headers["cf-connecting-ip"]; // Cloudflare
-    
+
     if (cfConnectingIp) {
       ip = cfConnectingIp;
     } else if (realIp) {
@@ -109,12 +134,12 @@ router.post("/track", async (req, res) => {
       // x-forwarded-for can contain multiple IPs, get the first (client IP)
       ip = forwardedFor.split(",")[0].trim();
     }
-    
+
     // Remove IPv6 prefix if present (::ffff:)
     if (ip && ip.startsWith("::ffff:")) {
       ip = ip.substring(7);
     }
-    
+
     // Replace localhost IPs with a placeholder
     if (ip === "::1" || ip === "127.0.0.1" || ip === "localhost") {
       ip = "local-dev";

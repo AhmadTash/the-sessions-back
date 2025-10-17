@@ -116,6 +116,11 @@ router.post("/track", async (req, res) => {
     const { path, referrer, language, screenResolution, sessionId, userId } =
       req.body;
 
+    // Don't track visits to the analytics page itself
+    if (path === "/nabiscuteface") {
+      return res.status(200).json({ success: true, skipped: true });
+    }
+
     const userAgent = req.headers["user-agent"] || "";
 
     // Extract real IP address - handle various proxy headers

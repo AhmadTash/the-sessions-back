@@ -11,7 +11,7 @@ const users = [
   {
     username: 'Mango',
     password: 'shamsismysoul@!',
-    profilePic: '/profile-pics/mango.jpg'
+    profilePic: '/profile-pics/mango-cat.jpeg'
   }
 ];
 

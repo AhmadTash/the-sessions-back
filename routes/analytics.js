@@ -40,8 +40,16 @@ const parseUserAgent = (userAgent) => {
 
 // Helper to get IP info using ip-api.com (free service, no key needed)
 const getIpInfo = async (ip) => {
-  // Skip geolocation for local IPs
-  if (!ip || ip === "local-dev" || ip === "::1" || ip === "127.0.0.1") {
+  // Skip geolocation for local/private IPs
+  if (
+    !ip ||
+    ip === "local-dev" ||
+    ip === "::1" ||
+    ip === "127.0.0.1" ||
+    ip.startsWith("192.168.") ||
+    ip.startsWith("10.") ||
+    ip.startsWith("172.")
+  ) {
     return {
       country: "Local",
       city: "Development",
@@ -156,6 +164,12 @@ router.post("/track", async (req, res) => {
     // Get IP info with geolocation
     const ipInfo = await getIpInfo(ip);
 
+    // Validate and sanitize userId
+    let validUserId = null;
+    if (userId && userId !== "undefined" && userId !== "null") {
+      validUserId = userId;
+    }
+
     // Create analytics entry
     const analyticsEntry = new Analytics({
       path,
@@ -170,7 +184,7 @@ router.post("/track", async (req, res) => {
       language,
       screenResolution,
       sessionId,
-      userId: userId || null,
+      userId: validUserId,
     });
 
     await analyticsEntry.save();

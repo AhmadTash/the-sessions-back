@@ -7,8 +7,33 @@ const auth = require('../middleware/auth');
 router.get('/', auth, async (req, res) => {
   try {
     const sessions = await Session.find()
-      .populate('user', 'username profilePic')
-      .sort({ date: -1, time: -1 });
+      .populate('user', 'username profilePic');
+    
+    // Sort sessions by combining date and time for accurate chronological order
+    sessions.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      const [hoursA, minutesA] = a.time.split(':').map(Number);
+      const [hoursB, minutesB] = b.time.split(':').map(Number);
+      
+      // If time is between 00:00 and 05:59, treat it as next day (after midnight sessions)
+      const effectiveDateA = new Date(dateA);
+      const effectiveDateB = new Date(dateB);
+      
+      if (hoursA >= 0 && hoursA < 6) {
+        effectiveDateA.setDate(effectiveDateA.getDate() + 1);
+      }
+      if (hoursB >= 0 && hoursB < 6) {
+        effectiveDateB.setDate(effectiveDateB.getDate() + 1);
+      }
+      
+      // Create full timestamps for comparison
+      effectiveDateA.setHours(hoursA, minutesA, 0, 0);
+      effectiveDateB.setHours(hoursB, minutesB, 0, 0);
+      
+      // Sort by full timestamp (oldest first)
+      return effectiveDateA.getTime() - effectiveDateB.getTime();
+    });
     
     res.json(sessions);
   } catch (error) {
@@ -21,8 +46,33 @@ router.get('/', auth, async (req, res) => {
 router.get('/my-sessions', auth, async (req, res) => {
   try {
     const sessions = await Session.find({ user: req.userId })
-      .populate('user', 'username profilePic')
-      .sort({ date: -1, time: -1 });
+      .populate('user', 'username profilePic');
+    
+    // Sort sessions by combining date and time for accurate chronological order
+    sessions.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      const [hoursA, minutesA] = a.time.split(':').map(Number);
+      const [hoursB, minutesB] = b.time.split(':').map(Number);
+      
+      // If time is between 00:00 and 05:59, treat it as next day (after midnight sessions)
+      const effectiveDateA = new Date(dateA);
+      const effectiveDateB = new Date(dateB);
+      
+      if (hoursA >= 0 && hoursA < 6) {
+        effectiveDateA.setDate(effectiveDateA.getDate() + 1);
+      }
+      if (hoursB >= 0 && hoursB < 6) {
+        effectiveDateB.setDate(effectiveDateB.getDate() + 1);
+      }
+      
+      // Create full timestamps for comparison
+      effectiveDateA.setHours(hoursA, minutesA, 0, 0);
+      effectiveDateB.setHours(hoursB, minutesB, 0, 0);
+      
+      // Sort by full timestamp (oldest first)
+      return effectiveDateA.getTime() - effectiveDateB.getTime();
+    });
     
     res.json(sessions);
   } catch (error) {

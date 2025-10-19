@@ -200,7 +200,7 @@ router.post("/track", async (req, res) => {
 // Get analytics data (protected route - only for admins)
 router.get("/stats", auth, async (req, res) => {
   try {
-    const { startDate, endDate, groupBy = "day" } = req.query;
+    const { startDate, endDate, groupBy = "day", screenResolution } = req.query;
 
     // Build query
     const query = {};
@@ -208,6 +208,10 @@ router.get("/stats", auth, async (req, res) => {
       query.timestamp = {};
       if (startDate) query.timestamp.$gte = new Date(startDate);
       if (endDate) query.timestamp.$lte = new Date(endDate);
+    }
+    // Add screenResolution filter if provided
+    if (screenResolution) {
+      query.screenResolution = screenResolution;
     }
 
     // Get various statistics
@@ -261,8 +265,9 @@ router.get("/stats", auth, async (req, res) => {
       // Recent visits
       Analytics.find(query)
         .sort({ timestamp: -1 })
-        .limit(50)
-        .select("path timestamp deviceType browser os country city"),
+        .select(
+          "path timestamp deviceType browser os country city screenResolution sessionId"
+        ),
     ]);
 
     res.json({

@@ -6,7 +6,16 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL,
     pass: process.env.EMAIL_PASSWORD
-  }
+  },
+  // Add connection timeout and retry settings
+  connectionTimeout: 60000, // 60 seconds
+  greetingTimeout: 30000,   // 30 seconds
+  socketTimeout: 60000,     // 60 seconds
+  pool: true,               // Use connection pooling
+  maxConnections: 5,        // Maximum number of connections
+  maxMessages: 100,         // Maximum messages per connection
+  rateDelta: 20000,         // Rate limiting
+  rateLimit: 5              // Max 5 emails per rateDelta
 });
 
 // Function to send email notification

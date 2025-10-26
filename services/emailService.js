@@ -2,20 +2,16 @@ const nodemailer = require('nodemailer');
 
 // Create transporter using environment variables
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL,
     pass: process.env.EMAIL_PASSWORD
   },
-  // Add connection timeout and retry settings
-  connectionTimeout: 60000, // 60 seconds
-  greetingTimeout: 30000,   // 30 seconds
-  socketTimeout: 60000,     // 60 seconds
-  pool: true,               // Use connection pooling
-  maxConnections: 5,        // Maximum number of connections
-  maxMessages: 100,         // Maximum messages per connection
-  rateDelta: 20000,         // Rate limiting
-  rateLimit: 5              // Max 5 emails per rateDelta
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 // Function to send email notification

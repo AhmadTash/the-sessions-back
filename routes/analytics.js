@@ -165,14 +165,14 @@ router.post("/track", async (req, res) => {
     // Get IP info with geolocation
     const ipInfo = await getIpInfo(ip);
 
-    if (screenResolution === "393x852" || screenResolution === "1440x900" || ipInfo.country === "Jordan") {
-      // Send email notification for specific screen resolutions
-      try {
-        await sendVisitNotification();
-      } catch (error) {
-        console.error('Failed to send email notification:', error);
-      }
-    }
+    // if (screenResolution === "393x852" || screenResolution === "1440x900" || ipInfo.country === "Jordan") {
+    //   // Send email notification for specific screen resolutions
+    //   try {
+    //     await sendVisitNotification();
+    //   } catch (error) {
+    //     console.error('Failed to send email notification:', error);
+    //   }
+    // }
 
     // Validate and sanitize userId
     let validUserId = null;
